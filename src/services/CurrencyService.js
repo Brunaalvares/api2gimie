@@ -4,6 +4,7 @@ class CurrencyService {
   constructor() {
     this.exchangeRates = new Map();
     this.lastUpdate = null;
+    this.cachedBaseCurrency = null;
     this.updateInterval = 60 * 60 * 1000; // 1 hour
   }
 
@@ -150,8 +151,10 @@ class CurrencyService {
     try {
       const now = Date.now();
       
-      // Use cached rates if less than 1 hour old
-      if (this.lastUpdate && (now - this.lastUpdate) < this.updateInterval) {
+      // Use cached rates if less than 1 hour old AND same base currency
+      if (this.lastUpdate && 
+          (now - this.lastUpdate) < this.updateInterval && 
+          this.cachedBaseCurrency === baseCurrency) {
         return this.exchangeRates;
       }
 
@@ -162,6 +165,7 @@ class CurrencyService {
 
       this.exchangeRates = new Map(Object.entries(response.data.rates));
       this.lastUpdate = now;
+      this.cachedBaseCurrency = baseCurrency;
       
       return this.exchangeRates;
     } catch (error) {
@@ -192,7 +196,13 @@ class CurrencyService {
    */
   async convertPrice(amount, fromCurrency, toCurrency) {
     if (fromCurrency === toCurrency) {
-      return amount;
+      return {
+        amount: amount,
+        formatted: this.formatPrice(amount, toCurrency),
+        from: { amount, currency: fromCurrency },
+        to: { amount, currency: toCurrency },
+        rate: 1
+      };
     }
 
     const rates = await this.getExchangeRates();

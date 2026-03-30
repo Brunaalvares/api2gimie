@@ -39,6 +39,51 @@ router.get('/', asyncHandler(async (req, res) => {
 }));
 
 /**
+ * @route GET /api/products/exchange-rates
+ * @desc Get current exchange rates
+ * @access Public
+ */
+router.get('/exchange-rates', asyncHandler(async (req, res) => {
+  const { base = 'USD' } = req.query;
+  
+  const rates = await getProductService().getExchangeRates(base.toUpperCase());
+  
+  res.json({
+    success: true,
+    data: {
+      base: base.toUpperCase(),
+      rates: rates,
+      timestamp: new Date().toISOString()
+    }
+  });
+}));
+
+/**
+ * @route GET /api/products/convert/:currency
+ * @desc Get all products with prices converted to target currency
+ * @access Public
+ */
+router.get('/convert/:currency', asyncHandler(async (req, res) => {
+  const { currency } = req.params;
+  const { page = 1, limit = 10, search } = req.query;
+  
+  const products = await getProductService().getProductsWithCurrencyConversion(
+    currency.toUpperCase(),
+    { page: parseInt(page), limit: parseInt(limit), search }
+  );
+  
+  res.json({
+    success: true,
+    data: products,
+    pagination: {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      total: products.length
+    }
+  });
+}));
+
+/**
  * @route GET /api/products/:id
  * @desc Get product by ID
  * @access Public
@@ -138,51 +183,6 @@ router.get('/:id/convert/:currency', asyncHandler(async (req, res) => {
   res.json({
     success: true,
     data: result
-  });
-}));
-
-/**
- * @route GET /api/products/convert/:currency
- * @desc Get all products with prices converted to target currency
- * @access Public
- */
-router.get('/convert/:currency', asyncHandler(async (req, res) => {
-  const { currency } = req.params;
-  const { page = 1, limit = 10, search } = req.query;
-  
-  const products = await getProductService().getProductsWithCurrencyConversion(
-    currency.toUpperCase(),
-    { page: parseInt(page), limit: parseInt(limit), search }
-  );
-  
-  res.json({
-    success: true,
-    data: products,
-    pagination: {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      total: products.length
-    }
-  });
-}));
-
-/**
- * @route GET /api/products/exchange-rates
- * @desc Get current exchange rates
- * @access Public
- */
-router.get('/exchange-rates', asyncHandler(async (req, res) => {
-  const { base = 'USD' } = req.query;
-  
-  const rates = await getProductService().getExchangeRates(base.toUpperCase());
-  
-  res.json({
-    success: true,
-    data: {
-      base: base.toUpperCase(),
-      rates: rates,
-      timestamp: new Date().toISOString()
-    }
   });
 }));
 

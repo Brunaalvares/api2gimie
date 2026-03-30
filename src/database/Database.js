@@ -114,6 +114,7 @@ class Database {
   createProduct(product) {
     return new Promise((resolve, reject) => {
       const { nome, preco, preco_original, moeda, valor_numerico, imagem, url, descricao, site, created_at, updated_at } = product;
+      const db = this.db;
       
       this.db.run(
         'INSERT INTO products (nome, preco, preco_original, moeda, valor_numerico, imagem, url, descricao, site, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -122,8 +123,8 @@ class Database {
           if (err) {
             reject(err);
           } else {
-            // Return the created product
-            this.db.get('SELECT * FROM products WHERE id = ?', [this.lastID], (err, row) => {
+            const lastID = this.lastID;
+            db.get('SELECT * FROM products WHERE id = ?', [lastID], (err, row) => {
               if (err) {
                 reject(err);
               } else {
@@ -144,6 +145,7 @@ class Database {
       const fields = Object.keys(updateData);
       const values = Object.values(updateData);
       const setClause = fields.map(field => `${field} = ?`).join(', ');
+      const db = this.db;
       
       this.db.run(
         `UPDATE products SET ${setClause} WHERE id = ?`,
@@ -154,8 +156,7 @@ class Database {
           } else if (this.changes === 0) {
             resolve(null); // No product found
           } else {
-            // Return updated product
-            this.db.get('SELECT * FROM products WHERE id = ?', [id], (err, row) => {
+            db.get('SELECT * FROM products WHERE id = ?', [id], (err, row) => {
               if (err) {
                 reject(err);
               } else {
